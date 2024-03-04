@@ -124,7 +124,7 @@ class SimMIM(nn.Module):
         self.decoder = nn.Sequential(
             nn.Conv2d(
                 in_channels=self.encoder.num_features,
-                out_channels=self.encoder_stride ** 2 * 3, kernel_size=1),
+                out_channels=self.encoder_stride ** 2 * in_chans, kernel_size=1),
             nn.PixelShuffle(self.encoder_stride),
         )
 
@@ -205,5 +205,4 @@ def build_simmim(config):
         raise NotImplementedError(f"Unknown pre-train model: {model_type}")
 
     model = SimMIM(config=config.MODEL.SIMMIM, encoder=encoder, encoder_stride=encoder_stride, in_chans=in_chans, patch_size=patch_size)
-
     return model
