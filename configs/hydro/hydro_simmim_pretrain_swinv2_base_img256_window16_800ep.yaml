@@ -1,6 +1,7 @@
 MODEL:
   TYPE: swinv2
   NAME: hydro_simmim_pretrain
+  PRETRAINED: Swin-Transformer/output/hydro_simmim_pretrain1/hydro_simmim_pretrain_swinv2_base_img256_window16_800ep/ckpt_epoch_670.pth
   DROP_PATH_RATE: 0.1
   SIMMIM:
     NORM_TARGET:

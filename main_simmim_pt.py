@@ -18,13 +18,14 @@ import torch.distributed as dist
 import torch.cuda.amp as amp
 from timm.utils import AverageMeter
 
+from data import build_loader_simmim
 from config import get_config
 from models import build_model
-from data import build_loader
 from lr_scheduler import build_scheduler
 from optimizer import build_optimizer
 from logger import create_logger
 from utils_simmim import load_checkpoint, save_checkpoint, get_grad_norm, auto_resume_helper
+
 
 # pytorch major version (1.x or 2.x)
 PYTORCH_MAJOR_VERSION = int(torch.__version__.split('.')[0])
@@ -57,18 +58,17 @@ def parse_option():
     # distributed training
     # for pytorch >= 2.0, use `os.environ['LOCAL_RANK']` instead
     # (see https://pytorch.org/docs/stable/distributed.html#launch-utility)
-    if PYTORCH_MAJOR_VERSION == 1:
-        parser.add_argument("--local_rank", type=int, required=True, help='local rank for DistributedDataParallel')
+    #if PYTORCH_MAJOR_VERSION == 1:
+    parser.add_argument("--local-rank", type=int, required=True, help='local rank for DistributedDataParallel')
 
     args = parser.parse_args()
 
     config = get_config(args)
-
     return args, config
 
 
 def main(config):
-    data_loader_train = build_loader(config, simmim=True, is_pretrain=True)
+    data_loader_train = build_loader_simmim(config)
 
     logger.info(f"Creating model:{config.MODEL.TYPE}/{config.MODEL.NAME}")
     model = build_model(config, is_pretrain=True)
