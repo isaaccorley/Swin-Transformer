@@ -561,6 +561,7 @@ class SwinTransformerV2(nn.Module):
         dpr = [x.item() for x in torch.linspace(0, drop_path_rate, sum(depths))]  # stochastic depth decay rule
 
         # build layers
+        self.reductions = [4, 8, 16, 32, 32][:self.num_layers + 1]
         self.layers = nn.ModuleList()
         for i_layer in range(self.num_layers):
             layer = BasicLayer(dim=int(embed_dim * 2 ** i_layer),
@@ -631,3 +632,36 @@ class SwinTransformerV2(nn.Module):
         flops += self.num_features * self.patches_resolution[0] * self.patches_resolution[1] // (2 ** self.num_layers)
         flops += self.num_features * self.num_classes
         return flops
+
+    def reset_classifier(self, num_classes):
+        self.head = nn.Linear(self.num_features, num_classes) if num_classes > 0 else nn.Identity()
+
+    def get_intermediate_layers(
+        self,
+        x: torch.Tensor,
+        n: list[int] = [0, 1, 2, 3, 4],
+        reshape: bool = True,
+    ):
+        b, c, w, h = x.shape
+
+        x = self.patch_embed(x)
+
+        if self.ape:
+            x = x + self.absolute_pos_embed
+        x = self.pos_drop(x)
+
+        features = [x]
+        for layer in self.layers:
+            x = layer(x)
+            features.append(x)
+
+        if reshape:
+            features = [
+                feat.reshape(b, h // r, w // r, -1)
+                .permute(0, 3, 1, 2)
+                .contiguous()
+                for feat, r in zip(features, self.reductions)
+            ]
+
+        features = [features[i] for i in n]
+        return features
