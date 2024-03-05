@@ -58,7 +58,7 @@ class MaskGenerator:
 
         self.token_count = self.rand_size ** 2
         self.mask_count = int(np.ceil(self.token_count * self.mask_ratio))
-    
+
     def __call__(self):
         mask_idx = np.random.permutation(self.token_count)[:self.mask_count]
         mask = np.zeros(self.token_count, dtype=int)
@@ -72,8 +72,8 @@ class MaskGenerator:
 
 class SimMIMTransform:
     def __init__(self, config):
-        mean = torch.tensor(config.DATA.MEAN)
-        std = torch.tensor(config.DATA.STD)
+        mean = torch.tensor(config.DATA.MEAN) / 10000.0
+        std = torch.tensor(config.DATA.STD) / 10000.0
 
         if config.DATA.BANDS == "rgb":
             mean = mean[[3, 2, 1]]
@@ -81,7 +81,9 @@ class SimMIMTransform:
 
         self.transform_img = T.Compose([
             T.RandomResizedCrop(config.DATA.IMG_SIZE, scale=(0.67, 1.), ratio=(3. / 4., 4. / 3.)),
+            T.RandomVerticalFlip(),
             T.RandomHorizontalFlip(),
+            T.Lambda(lambda x: x / 10000.0),
             T.Normalize(mean=mean, std=std),
         ])
 
