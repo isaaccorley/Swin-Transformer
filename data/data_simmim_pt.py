@@ -38,6 +38,9 @@ class HydroDataset(torch.utils.data.Dataset):
             x = f.read().astype(np.float32)
         x = torch.from_numpy(x).to(torch.float)
 
+        if self.bands == "rgb":
+            x = x[[3, 2, 1], ...]
+
         if self.transforms is not None:
             x = self.transforms(x)
         return x, 0
